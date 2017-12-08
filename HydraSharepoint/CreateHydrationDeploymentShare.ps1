@@ -1,19 +1,4 @@
-<#
-.Synopsis
-    Sample script for Hydration Kit
-.DESCRIPTION
-    Created: 2016-01-07
-    Version: 1.2
-
-    Author : Johan Arwidmark
-    Twitter: @jarwidmark
-    Blog   : http://deploymentresearch.com
-
-    Disclaimer: This script is provided "AS IS" with no warranties, confers no rights and 
-    is not supported by the author or DeploymentArtist..
-.EXAMPLE
-    NA
-#>
+ï»¿
 
 
 # Check for elevation
@@ -30,9 +15,9 @@ if (!((Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstal
 
 # Validation, verify that the deployment share doesnt exist already
 $RootDrive = "C:"
-If (Get-SmbShare | Where-Object { $_.Name -eq "HydrationCM$"}){Write-Warning "HydrationCM$ share already exist, please cleanup and try again. Aborting...";Break}
-if (Test-Path -Path "$RootDrive\HydrationCM\DS") {Write-Warning "$RootDrive\HydrationCMW\DS already exist, please cleanup and try again. Aborting...";Break}
-if (Test-Path -Path "$RootDrive\HydrationCM\ISO") {Write-Warning "$RootDrive\HydrationCMW\ISO already exist, please cleanup and try again. Aborting...";Break}
+If (Get-SmbShare | Where-Object { $_.Name -eq "HYDRASHARE$"}){Write-Warning "HYDRASHARE$ share already exist, please cleanup and try again. Aborting...";Break}
+if (Test-Path -Path "$RootDrive\HYDRASHARE\DS") {Write-Warning "$RootDrive\HYDRASHARE\DS already exist, please cleanup and try again. Aborting...";Break}
+if (Test-Path -Path "$RootDrive\HYDRASHARE\ISO") {Write-Warning "$RootDrive\HYDRASHARE\ISO already exist, please cleanup and try again. Aborting...";Break}
 
 # Validation, verify that the PSDrive doesnt exist already
 if (Test-Path -Path "DS001:") {Write-Warning "DS001: PSDrive already exist, please cleanup and try again. Aborting...";Break}
@@ -50,8 +35,8 @@ if($FreeSpace -lt $NeededFreeSpace){
     Write-Warning "Aborting script..."
     Write-Host ""
     Write-Host "TIP: If you don't have space on C: but have other volumes, say D:, available, " -ForegroundColor Yellow
-    Write-Host "then copy the HydrationCM folder to D: and use mklink to create a synlink on C:" -ForegroundColor Yellow
-    Write-Host "The syntax is: mklink C:\HydrationCM D:\HydrationCM /D" -ForegroundColor Yellow
+    Write-Host "then copy the HYDRASHARE folder to D: and use mklink to create a synlink on C:" -ForegroundColor Yellow
+    Write-Host "The syntax is: mklink C:\HYDRASHARE D:\HYDRASHARE /D" -ForegroundColor Yellow
     Break
 }
 
@@ -59,21 +44,21 @@ if($FreeSpace -lt $NeededFreeSpace){
 $MDTServer = (get-wmiobject win32_computersystem).Name
 
 Add-PSSnapIn Microsoft.BDD.PSSnapIn -ErrorAction SilentlyContinue 
-md C:\HydrationCMWS2016\DS
-new-PSDrive -Name "DS001" -PSProvider "MDTProvider" -Root "C:\HydrationCM\DS" -Description "Hydration ConfigMgr" -NetworkPath "\\$MDTServer\HydrationCM$" | add-MDTPersistentDrive
-New-SmbShare –Name HydrationCM$ –Path "C:\HydrationCM\DS"  –ChangeAccess EVERYONE
+md C:\HYDRASHAREWS2016\DS
+new-PSDrive -Name "DS001" -PSProvider "MDTProvider" -Root "C:\HYDRASHARE\DS" -Description "Hydration SharePoint" -NetworkPath "\\$MDTServer\HYDRASHARE$" | add-MDTPersistentDrive
+New-SmbShare -Name HYDRASHARE$ -Path "C:\HYDRASHARE\DS"  -ChangeAccess EVERYONE
 
-md C:\HydrationCM\ISO\Content\Deploy
-new-item -path "DS001:\Media" -enable "True" -Name "MEDIA001" -Comments "" -Root "C:\HydrationCM\ISO" -SelectionProfile "Everything" -SupportX86 "False" -SupportX64 "True" -GenerateISO "True" -ISOName "HydrationCM.iso"
-new-PSDrive -Name "MEDIA001" -PSProvider "MDTProvider" -Root "C:\HydrationCM\ISO\Content\Deploy" -Description "Hydration ConfigMgr Media" -Force
+md C:\HYDRASHARE\ISO\Content\Deploy
+new-item -path "DS001:\Media" -enable "True" -Name "MEDIA001" -Comments "" -Root "C:\HYDRASHARE\ISO" -SelectionProfile "Everything" -SupportX86 "False" -SupportX64 "True" -GenerateISO "True" -ISOName "HYDRASHARE.iso"
+new-PSDrive -Name "MEDIA001" -PSProvider "MDTProvider" -Root "C:\HYDRASHARE\ISO\Content\Deploy" -Description "Hydration ConfigMgr Media" -Force
 
 # Configure MEDIA001 Settings (disable MDAC) - Not needed in the Hydration Kit
 Set-ItemProperty -Path MEDIA001: -Name Boot.x86.FeaturePacks -Value ""
 Set-ItemProperty -Path MEDIA001: -Name Boot.x64.FeaturePacks -Value ""
 
 # Copy sample files to Hydration Deployment Share
-Copy-Item -Path "C:\HydrationCM\Source\Hydration\Applications" -Destination "C:\HydrationCM\DS" -Recurse -Force
-Copy-Item -Path "C:\HydrationCM\Source\Hydration\Control" -Destination "C:\HydrationCM\DS" -Recurse -Force
-Copy-Item -Path "C:\HydrationCM\Source\Hydration\Operating Systems" -Destination "C:\HydrationCM\DS" -Recurse -Force
-Copy-Item -Path "C:\HydrationCM\Source\Hydration\Scripts" -Destination "C:\HydrationCM\DS" -Recurse -Force
-Copy-Item -Path "C:\HydrationCM\Source\Media\Control" -Destination "C:\HydrationCM\ISO\Content\Deploy" -Recurse -Force
+Copy-Item -Path "C:\HYDRASHARE\Source\Hydration\Applications" -Destination "C:\HYDRASHARE\DS" -Recurse -Force
+Copy-Item -Path "C:\HYDRASHARE\Source\Hydration\Control" -Destination "C:\HYDRASHARE\DS" -Recurse -Force
+Copy-Item -Path "C:\HYDRASHARE\Source\Hydration\Operating Systems" -Destination "C:\HYDRASHARE\DS" -Recurse -Force
+Copy-Item -Path "C:\HYDRASHARE\Source\Hydration\Scripts" -Destination "C:\HYDRASHARE\DS" -Recurse -Force
+Copy-Item -Path "C:\HYDRASHARE\Source\Media\Control" -Destination "C:\HYDRASHARE\ISO\Content\Deploy" -Recurse -Force
